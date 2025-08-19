@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col gap-6 mt-8">
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-4xl font-bold text-white">Gerenciador de Tarefas</h1>
+      <p class="text-gray-400">Organize e acompanhe suas tarefas</p>
+    </div>
+    <a href="{% url 'criar_tarefa' %}" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg">+ Nova Tarefa</a>
+  </div>
+  <div class="flex gap-6">
+    <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
+      <span class="text-green-400 text-3xl mb-2">⏰</span>
+      <span class="text-2xl font-bold text-white">{{ pendentes_count }}</span>
+      <span class="text-gray-400">Pendentes</span>
+    </div>
+    <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
+      <span class="text-green-400 text-3xl mb-2">✅</span>
+      <span class="text-2xl font-bold text-white">{{ concluidas_count }}</span>
+      <span class="text-gray-400">Concluídas</span>
+    </div>
+    <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
+      <span class="text-blue-400 text-3xl mb-2">➕</span>
+      <span class="text-2xl font-bold text-white">{{ total_count }}</span>
+      <span class="text-gray-400">Total</span>
+    </div>
+  </div>
+  <!-- Filtros -->
+  <form method="get" class="bg-gray-900 border border-gray-700 rounded-lg p-6 mt-6">
+    <div class="flex gap-4 mb-4">
+      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar tarefas..." class="bg-gray-800 text-white px-4 py-2 rounded w-full" />
+      <select name="status" class="bg-gray-800 text-white px-4 py-2 rounded">
+        <option value="">Todos os status</option>
+        <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendentes</option>
+        <option value="concluida" {% if request.GET.status == "concluida" %}selected{% endif %}>Concluídas</option>
+      </select>
+      <select name="prioridade" class="bg-gray-800 text-white px-4 py-2 rounded">
+        <option value="">Todas as prioridades</option>
+        <option value="baixa" {% if request.GET.prioridade == "baixa" %}selected{% endif %}>Baixa</option>
+        <option value="media" {% if request.GET.prioridade == "media" %}selected{% endif %}>Média</option>
+        <option value="alta" {% if request.GET.prioridade == "alta" %}selected{% endif %}>Alta</option>
+      </select>
+    </div>
+    <button type="submit" class="bg-gray-700 text-white px-4 py-2 rounded mr-2">Filtrar</button>
+    <a href="{% url 'listar_tarefas' %}" class="bg-gray-700 text-white px-4 py-2 rounded">Limpar filtros</a>
+  </form>
+</div>
+
+<h1>Lista de Tarefas</h1>
+
+
+<a href="{% url 'criar_tarefa' %}">Criar nova tarefa</a>
+
+<ul>
+  {% for tarefa in tarefas %}
+    <li>
+      <strong>{{ tarefa.title }}</strong> – {{ tarefa.description }}
+      {% if tarefa.deadline and tarefa.deadline < today and not tarefa.done %}
+        <span style="color:red;">⚠️ Vencida</span>
+      {% endif %}
+      {% if tarefa.done %}
+        <span style="color:green;">✔️ Concluída</span>
+      {% else %}
+        <a href="{% url 'alternar_status' tarefa.id %}">✅ Marcar como concluída</a>
+      {% endif %}
+      |
+      <a href="{% url 'editar_tarefa' tarefa.id %}">✏️ Editar</a>
+      <a href="{% url 'excluir_tarefa' tarefa.id %}">🗑️ Excluir</a>
+    </li>
+  {% empty %}
+    <li>Nenhuma tarefa cadastrada.</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'limpar_concluidas' %}" style="color:red;">🧹 Limpar tarefas concluídas</a>
+{% endblock %}

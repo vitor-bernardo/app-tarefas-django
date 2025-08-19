@@ -32,6 +32,7 @@ class ListarTarefasView(ListView):
         context['pendentes_count'] = Task.objects.filter(done=False).count()
         context['concluidas_count'] = Task.objects.filter(done=True).count()
         context['total_count'] = Task.objects.count()
+        context['today'] = date.today()
         return context
 
 class ListarTarefasPendentesView(ListView):

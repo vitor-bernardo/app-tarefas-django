@@ -1,34 +1,44 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="flex flex-col gap-6 mt-8">
+
+  <!-- Cabeçalho -->
   <div class="flex justify-between items-center">
     <div>
-      <h1 class="text-4xl font-bold text-white">Gerenciador de Tarefas</h1>
+      <h1 class="text-2xl font-bold mt-0">Gerenciador de Tarefas</h1>
       <p class="text-gray-400">Organize e acompanhe suas tarefas</p>
     </div>
-    <a href="{% url 'criar_tarefa' %}" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg">+ Nova Tarefa</a>
+    <a href="{% url 'criar_tarefa' %}" 
+       class="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg">
+      + Nova Tarefa
+    </a>
   </div>
+
+  <!-- Cards de contagem -->
   <div class="flex gap-6">
-    <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
-      <span class="text-green-400 text-3xl mb-2">⏰</span>
+    <div class="bg-neutral-950 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
+      <i data-lucide="clock" class="w-6 h-6"></i>
       <span class="text-2xl font-bold text-white">{{ pendentes_count }}</span>
       <span class="text-gray-400">Pendentes</span>
     </div>
-    <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
-      <span class="text-green-400 text-3xl mb-2">✅</span>
+    <div class="bg-neutral-950 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
+      <i data-lucide="check" class="w-6 h-6 text-green-500"></i>
       <span class="text-2xl font-bold text-white">{{ concluidas_count }}</span>
       <span class="text-gray-400">Concluídas</span>
     </div>
-    <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
-      <span class="text-blue-400 text-3xl mb-2">➕</span>
+    <div class="bg-neutral-950 border border-gray-700 rounded-lg p-6 flex-1 flex flex-col items-center">
+      <i data-lucide="list-todo" class="w-6 h-6 text-purple-500"></i>
       <span class="text-2xl font-bold text-white">{{ total_count }}</span>
       <span class="text-gray-400">Total</span>
     </div>
   </div>
+
   <!-- Filtros -->
-  <form method="get" class="bg-gray-900 border border-gray-700 rounded-lg p-6 mt-6">
+  <form method="get" class="bg-neutral-950 border border-gray-700 rounded-lg p-6 mt-6">
+
     <div class="flex gap-4 mb-4">
-      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar tarefas..." class="bg-gray-800 text-white px-4 py-2 rounded w-full" />
+      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar tarefas..." 
+             class="bg-gray-800 text-white px-4 py-2 rounded w-full" />
       <select name="status" class="bg-gray-800 text-white px-4 py-2 rounded">
         <option value="">Todos os status</option>
         <option value="pendente" {% if request.GET.status == "pendente" %}selected{% endif %}>Pendentes</option>
@@ -41,36 +51,75 @@
         <option value="alta" {% if request.GET.prioridade == "alta" %}selected{% endif %}>Alta</option>
       </select>
     </div>
-    <button type="submit" class="bg-gray-700 text-white px-4 py-2 rounded mr-2">Filtrar</button>
-    <a href="{% url 'listar_tarefas' %}" class="bg-gray-700 text-white px-4 py-2 rounded">Limpar filtros</a>
+    <button type="submit" class="bg-neutral-950 text-white px-4 py-2 rounded mr-2">Filtrar</button>
+    <a href="{% url 'listar_tarefas' %}" class="bg-neutral-950 text-white px-4 py-2 rounded">Limpar filtros</a>
   </form>
+
+  <!-- Lista de tarefas -->
+  <div class="flex flex-col gap-4">
+    {% for tarefa in tarefas %}
+      <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 flex justify-between items-start">
+        
+        <div>
+          <h2 class="text-lg font-semibold {% if tarefa.done %}line-through text-gray-500{% else %}text-white{% endif %}">
+            {{ tarefa.title }}
+          </h2>
+          <p class="text-gray-400">{{ tarefa.description }}</p>
+
+          <!-- Datas -->
+          <div class="flex gap-4 text-gray-500 text-sm mt-2">
+            {% if tarefa.start_date %}
+              <span>📅 Início: {{ tarefa.start_date|date:"d/m/Y" }}</span>
+            {% endif %}
+            {% if tarefa.deadline %}
+              <span>⏳ Prazo: {{ tarefa.deadline|date:"d/m/Y" }}</span>
+            {% endif %}
+            {% if tarefa.deadline and tarefa.deadline < today and not tarefa.done %}
+              <span class="text-red-500 font-bold">⚠️ Vencida</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Lado direito: prioridade, status e botões -->
+        <div class="flex flex-col items-end gap-2">
+          <!-- Prioridade -->
+          {% if tarefa.prioridade == "alta" %}
+            <span class="bg-red-600 text-white text-xs px-2 py-1 rounded">Alta</span>
+          {% elif tarefa.prioridade == "media" %}
+            <span class="bg-yellow-500 text-black text-xs px-2 py-1 rounded">Média</span>
+          {% elif tarefa.prioridade == "baixa" %}
+            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded">Baixa</span>
+          {% endif %}
+
+          <!-- Status -->
+          {% if tarefa.done %}
+            <span class="bg-green-700 text-white text-xs px-2 py-1 rounded">Concluída</span>
+          {% else %}
+            <span class="bg-gray-700 text-white text-xs px-2 py-1 rounded">Pendente</span>
+          {% endif %}
+
+          <!-- Ações -->
+          <div class="flex gap-2 mt-2">
+            {% if not tarefa.done %}
+              <a href="{% url 'alternar_status' tarefa.id %}" 
+                 class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">✓ Concluir</a>
+            {% endif %}
+            <a href="{% url 'editar_tarefa' tarefa.id %}" 
+               class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">✎ Editar</a>
+            <a href="{% url 'excluir_tarefa' tarefa.id %}" 
+               class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">🗑 Excluir</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-gray-400 text-center">Nenhuma tarefa cadastrada.</p>
+    {% endfor %}
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'limpar_concluidas' %}" 
+       class="text-red-500 hover:underline">🧹 Limpar tarefas concluídas</a>
+  </div>
+
 </div>
-
-<h1>Lista de Tarefas</h1>
-
-
-<a href="{% url 'criar_tarefa' %}">Criar nova tarefa</a>
-
-<ul>
-  {% for tarefa in tarefas %}
-    <li>
-      <strong>{{ tarefa.title }}</strong> – {{ tarefa.description }}
-      {% if tarefa.deadline and tarefa.deadline < today and not tarefa.done %}
-        <span style="color:red;">⚠️ Vencida</span>
-      {% endif %}
-      {% if tarefa.done %}
-        <span style="color:green;">✔️ Concluída</span>
-      {% else %}
-        <a href="{% url 'alternar_status' tarefa.id %}">✅ Marcar como concluída</a>
-      {% endif %}
-      |
-      <a href="{% url 'editar_tarefa' tarefa.id %}">✏️ Editar</a>
-      <a href="{% url 'excluir_tarefa' tarefa.id %}">🗑️ Excluir</a>
-    </li>
-  {% empty %}
-    <li>Nenhuma tarefa cadastrada.</li>
-  {% endfor %}
-</ul>
-
-<a href="{% url 'limpar_concluidas' %}" style="color:red;">🧹 Limpar tarefas concluídas</a>
 {% endblock %}
